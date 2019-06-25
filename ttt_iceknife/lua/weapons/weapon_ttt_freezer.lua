@@ -2,15 +2,16 @@
 AddCSLuaFile()
 
 
-resource.AddFile( "models/weapons/ice_knife/c_ice_knife.mdl" )
-resource.AddFile( "models/weapons/ice_knife/w_ice_knife.mdl" )
-resource.AddFile( "materials/models/weapons/w_models/w_knife_t/blade_ice.vmt" )
-resource.AddFile( "materials/models/weapons/w_models/w_knife_t/knife_t.vmt" )
-resource.AddFile ("materials/vgui/ttt/icon_iceknife.vmt")
-resource.AddFile ("materials/vgui/ttt/icon_iceknife.vtf")
+resource.AddFile("models/weapons/ice_knife/c_ice_knife.mdl")
+resource.AddFile("models/weapons/ice_knife/w_ice_knife.mdl")
+resource.AddFile("materials/models/weapons/w_models/w_knife_t/blade_ice.vmt")
+resource.AddFile("materials/models/weapons/w_models/w_knife_t/knife_t.vmt")
+resource.AddFile("materials/vgui/ttt/icon_iceknife.vmt")
+resource.AddFile("materials/vgui/ttt/icon_iceknife.vtf")
+resource.AddFile("materials/vgui/ttt/hud_icon_iceknife.png")
 
 if SERVER then
-resource.AddWorkshop( "477143906" )
+	resource.AddWorkshop( "477143906" )
 end
 
 
@@ -18,19 +19,29 @@ SWEP.HoldType = "knife"
 
 if CLIENT then
 
-   SWEP.PrintName = "Ice Knife"
-   SWEP.Slot = 6
+	SWEP.PrintName = "Ice Knife"
+	SWEP.Slot = 6
 
-   SWEP.ViewModelFOV  = 54
-   SWEP.ViewModelFlip = false
+	SWEP.ViewModelFOV  = 54
+	SWEP.ViewModelFlip = false
 
-   SWEP.EquipMenuData = {
-      type = "item_weapon",
-      desc = "Freeze your Victim.\nIt also deals 15 DMG over time."
-   };
+	SWEP.EquipMenuData = {
+		type = "item_weapon",
+		desc = "Freeze your Victim.\nIt also deals 15 DMG over time."
+	};
 
 
-   SWEP.Icon = "vgui/ttt/icon_iceknife"
+	SWEP.Icon = "vgui/ttt/icon_iceknife"
+
+	-- set up sidebar icon
+	if TTT2 then
+		hook.Add("Initialize", "ttt_iceknife_sidebar_icon_init", function() 
+			STATUS:RegisterStatus("ttt_iceknife_sidebar_icon", {
+				hud = Material("vgui/ttt/hud_icon_iceknife.png"),
+				type = "bad"
+			})
+		end)
+	end
 end
 
 SWEP.Base = "weapon_tttbase"
@@ -52,7 +63,7 @@ SWEP.WeaponID = AMMO_FREEZE
 -- handling strategy, because you never need to pick up ammo for it
 SWEP.Primary.Ammo = "AR2AltFire"
 
-SWEP.UseHands			= true
+SWEP.UseHands	= true
 SWEP.ViewModel	= Model("models/weapons/ice_knife/c_ice_knife.mdl")
 SWEP.WorldModel	= Model("models/weapons/ice_knife/w_ice_knife.mdl")
 
@@ -106,20 +117,25 @@ function SWEP:PrimaryAttack()
 					else end
 				else end
 			end)
-					
-					
-					
-			timer.Create ("ThisIDNameIsFancy" .. tostring(self.Owner:SteamID()), 5,1 , function() if target:IsPlayer() then target:Freeze(false) end end)
+	
+			timer.Create ("ThisIDNameIsFancy" .. tostring(self.Owner:SteamID()), 5,1 , function()
+				if target:IsPlayer() then 
+					target:Freeze(false)
+					if TTT2 then STATUS:RemoveStatus(target, "ttt_iceknife_sidebar_icon") end
+				end 
+			end)
 			   
-			if target:IsPlayer() and not target:IsSpec() then target:Freeze(true)
+			if target:IsPlayer() and not target:IsSpec() then 
+				target:Freeze(true)
+				if TTT2 then STATUS:AddStatus(target, "ttt_iceknife_sidebar_icon") end
+
 				target:RemoveFlags(32768)
 					
 				self.Weapon:SendWeaponAnim( ACT_VM_MISSCENTER )
 						
-				self:TakePrimaryAmmo ( 1 )
+				self:TakePrimaryAmmo( 1 )
 					
 				if (self:Clip1() == 0) then self:Remove() RunConsoleCommand("lastinv") end
-				
 			end
 		end
 	end
